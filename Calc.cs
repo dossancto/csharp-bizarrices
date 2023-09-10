@@ -11,29 +11,55 @@ public abstract class Calculator
     public static bool operator true(Calculator c) => !(c.isZero);
     public static bool operator false(Calculator c) => c.isZero;
     public static bool operator !(Calculator c) => c ? false : true;
+    public static explicit operator int(Calculator c) => c.Number;
 
-    public double Factorial()
+    public double Factorial
     {
-        int number = Number;
+        get
+        {
+            int number = Number;
 
-        if (!this) return 0;
-        if (number.Abs() == 1) return number;
+            if (!this) return 0;
+            if (number.Abs() == 1) return number;
 
-        var result = Factorial(number);
+            var result = Fac(number);
 
-        return isNegative ? -result : result;
+            return isNegative ? -result : result;
+        }
     }
 
-    private double Factorial(int n)
+    private double Fac(int n)
     {
         n = n.Abs();
 
         if (n == 1) return n;
 
-        return n * (Factorial(n - 1));
+        return n * (Fac(n - 1));
     }
 
+    public double Pow(int n) =>
+      Math.Pow(Number, n);
+
+    public string Sqrt
+    {
+        get => MatchSqrt(
+            pos => Math.Sqrt(pos).ToString(),
+            neg => $"{Math.Sqrt(neg.Abs())}i"
+            );
+    }
+
+
     public abstract R Match<R>(Func<int, R> positiveFunc, Func<int, R> negativeFunc, Func<R> zeroFunc);
+    public abstract R MatchSqrt<R>(Func<int, R> positiveFunc, Func<int, R> negativeFunc);
+
+    public int AbsoluteNumber
+    {
+        get => Match(
+            p => p,
+            n => -n,
+            () => 0
+          );
+    }
 
     public int Number
     {
@@ -71,6 +97,8 @@ public abstract class Calculator
     {
         public override R Match<R>(Func<int, R> positiveFunc, Func<int, R> negativeFunc, Func<R> zeroFunc) =>
              zeroFunc();
+
+        public override R MatchSqrt<R>(Func<int, R> positiveFunc, Func<int, R> negativeFunc) => positiveFunc(0);
     }
     public sealed class Positive : Calculator
     {
@@ -79,8 +107,10 @@ public abstract class Calculator
         public Positive(int value) =>
             Value = value;
 
-
         public override R Match<R>(Func<int, R> positiveFunc, Func<int, R> negativeFunc, Func<R> zeroFunc) =>
+          positiveFunc(Value);
+
+        public override R MatchSqrt<R>(Func<int, R> positiveFunc, Func<int, R> negativeFunc) =>
           positiveFunc(Value);
     }
 
@@ -93,6 +123,9 @@ public abstract class Calculator
 
 
         public override R Match<R>(Func<int, R> positiveFunc, Func<int, R> negativeFunc, Func<R> zeroFunc) =>
+          negativeFunc(Value);
+
+        public override R MatchSqrt<R>(Func<int, R> positiveFunc, Func<int, R> negativeFunc) =>
           negativeFunc(Value);
     }
 }
