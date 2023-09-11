@@ -12,17 +12,16 @@ public abstract class Calculator
     public static bool operator false(Calculator c) => c.isZero;
     public static bool operator !(Calculator c) => c ? false : true;
     public static explicit operator int(Calculator c) => c.Number;
+    public static implicit operator Calculator(int number) => Calculator.New(number);
 
     public double Factorial
     {
         get
         {
-            int number = Number;
-
             if (!this) return 0;
-            if (number.Abs() == 1) return number;
+            if (Number.Abs() == 1) return Number;
 
-            var result = Fac(number);
+            var result = Fac(Number);
 
             return isNegative ? -result : result;
         }

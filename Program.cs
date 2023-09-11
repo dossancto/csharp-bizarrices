@@ -2,7 +2,7 @@
 {
     private static void Main(string[] args)
     {
-        var cal = Calculator.New(4);
+        Calculator cal = -4;
 
         Console.WriteLine($"O número é {(int)cal}");
 
