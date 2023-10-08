@@ -3,88 +3,30 @@ public static class Box
     public static BoxContent<P> From<P>(P initialValue)
       => new BoxContent<P>(initialValue);
 
-    public static BoxContent<P> FromFunc<P>(Func<P> func)
-      => new BoxContent<P>(func());
-
     public class BoxContent<T>
     {
-        public static bool operator true(BoxContent<T> box) => box.IsSuccess;
-        public static bool operator false(BoxContent<T> box) => !box.IsSuccess;
-        public static bool operator !(BoxContent<T> box) => box ? false : true;
+        private Func<T> theValue;
 
-        public T Value { get; private set; } = default!;
-        public Exception? Error { get; private set; }
+        internal BoxContent(T value)
+          => theValue = () => value;
 
-        public BoxContent(T value)
-          => Value = value;
+        private BoxContent(Func<T> input)
+          => theValue = input;
 
-        public BoxContent(T value, Exception? ex)
+        public BoxContent<R> Then<R>(Func<T, R> input)
         {
-            Value = value;
-            Error = ex;
+            var f = () => input(theValue());
+            return new BoxContent<R>(f);
         }
 
-        public BoxContent(Exception e)
-          => Error = e;
-
-        public bool IsSuccess
+        public BoxContent<R> Then<R>(Func<T, Task<R>> input)
         {
-            get => Error is null;
+            var task = input(theValue());
+            return new BoxContent<R>(task.Result);
         }
 
-        public (T Value, Exception? Error) Unwrap()
-          => (Value, Error);
+        public async Task<T> Asyncvalue() => await Task.Run(theValue);
 
-        public T UnwrapResult()
-        {
-            if (!IsSuccess) throw Error!;
-
-            return Value;
-        }
-
-        public BoxContent<R> Then<R>(Func<T, R> process)
-        {
-            try
-            {
-                if (!IsSuccess)
-                    return new BoxContent<R>(Error!);
-
-                var result = process(Value);
-
-                return new BoxContent<R>(result, Error);
-            }
-            catch (Exception e)
-            {
-                return new BoxContent<R>(e);
-            }
-        }
-
-        public BoxContent<R> Then<R>(Func<T, Task<R>> process)
-        {
-            try
-            {
-                if (!IsSuccess)
-                    return new BoxContent<R>(Error!);
-
-                var task = process(Value);
-
-                var result = task.Result;
-
-                return new BoxContent<R>(result, Error);
-            }
-            catch (AggregateException e)
-            {
-                return new BoxContent<R>(e.GetBaseException());
-            }
-            catch (Exception e)
-            {
-                return new BoxContent<R>(e);
-            }
-        }
-
-        public override string ToString()
-          => IsSuccess ? $"{Value}" : Error!.Message;
-
+        public T Value() => theValue();
     }
 }
-

@@ -1,6 +1,6 @@
 ﻿internal class Program
 {
-    private static void Main(string[] args)
+    private async static Task Main(string[] args)
     {
         // FirstBox();
         // SeccoundBox();
@@ -9,8 +9,10 @@
         // BoxFive();
         // BoxFive1();
         // BoxFive2();
-        BoxFive3();
+        // BoxFive3();
         // BoxSix();
+        await Box7();
+        await Box8();
     }
 
     private static void FirstBox()
@@ -30,7 +32,7 @@
 
     private static void SeccoundBox()
     {
-        var r = Box.FromFunc(() => 10 + 5)
+        var r = Box.From(10 * 5)
           .Then(num => num * num)
           .Then(num => num - 5);
 
@@ -39,11 +41,11 @@
 
     private static void ThirdBox()
     {
-        var username = Box.FromFunc(FetchUser)
+        var username = Box.From(FetchUser())
           .Then(user => user.Username + " dos Santos Silva");
         // .Pipe(name => name.ToUpper()).Value;
 
-        var anoNascenca = Box.FromFunc(FetchUser)
+        var anoNascenca = Box.From(FetchUser())
           .Then(user => user.Age);
         // .Pipe(age => 2023 - age).Value;
 
@@ -77,53 +79,62 @@
     }
 
     // Unwrap result
-    private static void BoxFive()
-    {
-        // Like golang
-        var (val, err) = Box.From("523aa")
-          .Then(str => int.Parse(str))
-          .Then(num => num % 360).Unwrap();
+    // private static void BoxFive()
+    // {
+    //     // Like golang
+    //     var (val, err) = Box.From("523aa")
+    //       .Then(str => int.Parse(str))
+    //       .Then(num => num % 360).Unwrap();
 
-        if (err != null)
-            Console.WriteLine(err);
-        else
-            Console.WriteLine(val);
-    }
+    //     if (err != null)
+    //         Console.WriteLine(err);
+    //     else
+    //         Console.WriteLine(val);
+    // }
 
     // Basic error Handleing.
-    private static void BoxFive1()
-    {
-        var res = Box.From("Box Five 1")
-          .Then(str => int.Parse(str))
-          .Then(num => num % 360);
+    // private static void BoxFive1()
+    // {
+    //     var res = Box.From("Box Five 1")
+    //       .Then(str => int.Parse(str))
+    //       .Then(num => num % 360);
 
-        if (res) // same as res.IsSuccesS
-        {
-            Console.WriteLine(res.Value);
-        }
-        else
-        {
-            Console.WriteLine("Something went wrong => " + res.Error!.GetType());
-            Console.WriteLine(res.Error!.Message);
-        }
+    //     if (res) // same as res.IsSuccesS
+    //     {
+    //         Console.WriteLine(res.Value);
+    //     }
+    //     else
+    //     {
+    //         Console.WriteLine("Something went wrong => " + res.Error!.GetType());
+    //         Console.WriteLine(res.Error!.Message);
+    //     }
 
-    }
+    // }
 
     // Handle erros
-    private static void BoxFive2()
-    {
-        var res = Box.From("523aa")
-          .Then(str => int.Parse(str))
-          .Then(num => num % 360);
+    // private static void BoxFive2()
+    // {
+    //     var res = Box.From("523")
+    //       .Then(str => int.Parse(str), "Convert string to int")
+    //       .Then(num => num % 360);
 
-        try
-        {
-            var angle = res.UnwrapResult();
-            Console.WriteLine(angle);
-        }
-        catch (FormatException ex) { Console.WriteLine(ex.Message); }
-        catch (Exception) { Console.WriteLine("Generic Exception"); }
-    }
+    //     try
+    //     {
+    //         var angle = res.UnwrapResult();
+
+    //         Console.WriteLine("================");
+    //         Console.WriteLine("Run logs\n");
+    //         foreach (var log in res.Logs)
+    //         {
+    //             Console.WriteLine(log);
+    //         }
+    //         Console.WriteLine("================\n");
+
+    //         Console.WriteLine(angle);
+    //     }
+    //     catch (FormatException ex) { Console.WriteLine(ex.Message); }
+    //     catch (Exception) { Console.WriteLine("Generic Exception"); }
+    // }
 
     // Async calls
     private static void BoxFive3()
@@ -143,15 +154,16 @@
           })
           .Then(num => num % 360);
 
-        if (!res)
+        try
         {
-            var ex = res.Error!;
+            var angle = res.Value();
+            Console.WriteLine(angle);
+        }
+        catch (Exception ex)
+        {
             Console.WriteLine(ex);
-            return;
         }
 
-        var angle = res.Value;
-        Console.WriteLine(angle);
     }
 
     private static void BoxSix()
@@ -194,6 +206,74 @@
     {
         // return Optional.Empty<string>();
         return Optional.Of("salve");
+    }
+
+    private static string ValidatePassword(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+            throw new Exception("Place write a password");
+        {
+        }
+
+        if (password.Length < 8)
+        {
+            throw new Exception("Password too short");
+        }
+
+        return password;
+    }
+
+    private static (string Password, string Salt) HashPassword(string password)
+      => (password, Guid.NewGuid().ToString());
+
+    private static User RegisterUserWithPassword(User user)
+    {
+        // Pefrorms some IO operation, as save in database;
+
+        return user;
+    }
+
+    private static User MountUser(string name, (string password, string salt) hashedPassword)
+      => new User(name, ((byte)hashedPassword.password.Length));
+
+    private async static Task Box7()
+    {
+        var userName = "lu-css";
+        var password = "something valid";
+
+        var task = Box.From(password)
+          .Then(ValidatePassword)
+          .Then(HashPassword)
+          .Then(p => MountUser(userName, p))
+          .Then(RegisterUserWithPassword);
+
+        try
+        {
+            var res = await task.Asyncvalue();
+
+            Console.WriteLine(res);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+
+    private async static Task Box8()
+    {
+        var task = Box.From("4234")
+          .Then(str => int.Parse(str))
+          .Then(n => n + 5);
+
+        try
+        {
+            Console.WriteLine(await task.Asyncvalue());
+        }
+        catch (Exception e)
+        {
+            // Console.WriteLine(e);
+            Console.WriteLine(e);
+        }
     }
 }
 
