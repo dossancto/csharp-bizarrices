@@ -13,3 +13,7 @@ module Continha =
     | n when n < 0 -> abs n * Factorial(n + 1)
     | n -> n * Factorial(n - 1)
 
+  let IMC p a :double = p / (a * a) 
+
+  let add5 n = n + 5
+
