@@ -10,9 +10,31 @@
         // BoxFive1();
         // BoxFive2();
         // BoxFive3();
-        // BoxSix();
-        await Box7();
-        await Box8();
+        BoxSix();
+        // await Box7();
+        // await Box8();
+        // Op1();
+    }
+
+    private static void Op1()
+    {
+        var hello = TryConvert("4sdads");
+
+        Console.WriteLine(hello.IsPresent);
+
+        Console.WriteLine(hello);
+    }
+
+    private static Maybe<int> TryConvert(string n)
+    {
+        try
+        {
+            return int.Parse(n);
+        }
+        catch
+        {
+            return Optional.Empty<int>();
+        }
     }
 
     private static void FirstBox()
@@ -181,10 +203,10 @@
         var username = "lucas";
 
         // If function returns NULL, "Empty" is used.
-        var funcOp = Optional.Of(FetchUser(username));
+        Maybe<User> funcOp = FetchUser(username);
 
-        Console.WriteLine(funcOp ? funcOp.Get : $"User with this username '{username}' not found");
-        Console.WriteLine(Optional.Of(FetchUser("lucas1")));
+        Console.WriteLine(funcOp ? funcOp.Get : $"User with username '{username}' not found");
+        Console.WriteLine((Maybe<User>)FetchUser("lucas1"));
         // Output =>
         //
         // Valor está presente
@@ -205,7 +227,7 @@
     private static Maybe<string> Options()
     {
         // return Optional.Empty<string>();
-        return Optional.Of("salve");
+        return "salve";
     }
 
     private static string ValidatePassword(string password)

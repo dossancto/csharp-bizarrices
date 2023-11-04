@@ -18,7 +18,7 @@ public abstract class Maybe<T>
     public static bool operator true(Maybe<T> op) => op.IsPresent;
     public static bool operator false(Maybe<T> op) => !op.IsPresent;
 
-    // public static implicit operator Maybe<T>(T value) => value is null ? new Empty() : new Content(value);
+    public static implicit operator Maybe<T>(T? value) => value is null ? new Empty() : new Content(value);
     // public static explicit operator T(Maybe<T> m) => m.Match(a => a, throw new Exception("a"));
 
     public static Maybe<T> Of(T value)
